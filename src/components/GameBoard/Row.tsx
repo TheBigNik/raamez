@@ -6,11 +6,8 @@ const Row = (props: RowProps) => {
   const { row, rowIndex, currentRow, className } = props;
   return (
     <div className={className}>
-      {row.map((tile: unknown, colIndex: React.Key | null | undefined) => (
-        <Tile 
-        tile={tile}
-        key={colIndex}
-        />
+      {row.map((tile, colIndex) => (
+        <Tile tile={tile} key={colIndex} />
       ))}
     </div>
   );

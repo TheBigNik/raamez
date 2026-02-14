@@ -1,25 +1,37 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { JSX } from "react/jsx-runtime"
+export type TileStatus = "empty" | "correct" | "present" | "absent";
 
-type TileStatus = "empty" | "correct" | "present" | "absent"
-export interface TileProps {
-    map(arg0: (row: any) => JSX.Element): import("react").ReactNode
-    letter: string
-    status: TileStatus
+/* =========================
+   DATA MODELS
+========================= */
+
+export interface Tile {
+  letter: string;
+  status: TileStatus;
 }
 
+/* =========================
+   COMPONENT PROPS
+========================= */
+
 export interface GameBoardProps {
-    board : TileProps
-    currentRow: number
+  board: Tile[][];
+  currentRow: number;
+  currentCol: number;
 }
 
 export interface RowProps {
-    row: any
-    rowIndex: number
-    currentRow: number
-    className: string
+  row: Tile[];
+  rowIndex: number;
+  currentRow: number;
+  currentCol: number;
+  className: string;
 }
 
-export interface GameTileProps {
-    tile: any
+export interface TileComponentProps {
+  tile: Tile;
+}
+
+export interface ThemeContextType {
+  theme: "light" | "dark";
+  toggleTheme: () => void;
 }

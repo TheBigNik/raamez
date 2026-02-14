@@ -1,7 +1,7 @@
-import { GameTileProps } from "@/types/types";
+import { TileComponentProps } from "@/types/types";
 import React from "react";
 
-const Tile = (props: GameTileProps) => {
+const Tile = (props: TileComponentProps) => {
   const { tile } = props;
   return (
     <div>

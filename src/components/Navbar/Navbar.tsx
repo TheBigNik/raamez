@@ -1,12 +1,11 @@
 'use client'
 
-import React, { use } from 'react'
-import { ThemeContext } from '../Theme/ThemeProvider'
+import { useTheme } from '../Theme/ThemeProvider'
 import { Button } from '../ui/button'
 import { MoonIcon, SunIcon } from 'lucide-react'
 
 const Navbar = () => {
-    const { theme, toggleTheme } = use(ThemeContext)
+    const { theme, toggleTheme } = useTheme()
   return (
     <div className='flex items-center justify-between'>
         <div className='font-peyda font-extrabold text-4xl'>
