@@ -1,6 +1,9 @@
 "use client";
 
 import GameBoard from "@/components/GameBoard/Gameboard";
+import Keyboard from "@/components/Keyboard/Keyboard";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tile } from "@/types/types";
 import { useEffect, useState } from "react";
 import { rootCertificates } from "tls";
@@ -19,6 +22,7 @@ export default function Home() {
   const [board, setBoard] = useState<Tile[][]>(createEmptyBoard());
   const [currentRow, setCurrentRow] = useState(0);
   const [currentCol, setCurrentCol] = useState(0);
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     const fetchWord = async () => {
@@ -68,7 +72,13 @@ export default function Home() {
     if (currentCol < 5) return;
 
     const guess = board[currentRow].map((tile) => tile.letter).join("");
-    if (!words.includes(guess)) return alert("not in the list");
+    if (!words.includes(guess)) {
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2000);
+      return;
+    }
 
     const newBoard = board.map((row) => [...row]);
     const targetArray = targetWord.split("");
@@ -119,12 +129,28 @@ export default function Home() {
   }, [currentCol, currentRow, board]);
 
   return (
-    <div>
+    <div className="">
+      {showAlert && (
+        <div className="backdrop-blur-xl w-screen h-screen absolute z-40 left-1/2 -translate-x-1/2">
+          <Alert className="max-w-md flex justify-center absolute left-1/2 top-1/4 -translate-1/2">
+            <AlertTitle> همچین کلمه‌ای وجود نداره!</AlertTitle>
+          </Alert>
+        </div>
+      )}
       <GameBoard
         board={board}
         currentRow={currentRow}
         currentCol={currentCol}
       />
+      <Keyboard
+        onKeyPress={insertLetter}
+        onEnter={submitGuess}
+        onDelete={removeLetter}
+      />
+
+      <div className="hidden md:flex justify-center">
+        برای شروع بازی، کیبوردت رو فارسی کن.
+      </div>
     </div>
   );
 }
