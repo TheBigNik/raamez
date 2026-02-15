@@ -6,7 +6,6 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tile } from "@/types/types";
 import { useEffect, useState } from "react";
-import { rootCertificates } from "tls";
 
 export default function Home() {
   const createEmptyBoard = (): Tile[][] => {
@@ -18,26 +17,45 @@ export default function Home() {
     );
   };
   const [targetWord, setTargetWord] = useState("");
-  const [words, setWords] = useState<string[]>([]);
+  // pool for selecting the answer
+  const [answerWords, setAnswerWords] = useState<string[]>([]);
+  // set for validity check (includes big.txt words)
+  const [validWords, setValidWords] = useState<Set<string>>(new Set());
   const [board, setBoard] = useState<Tile[][]>(createEmptyBoard());
   const [currentRow, setCurrentRow] = useState(0);
   const [currentCol, setCurrentCol] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
+  const [meaning, setMeaning] = useState("");
+  const [gameStat, setGameStat] = useState<"win" | "lose" | "inProcess">("inProcess")
 
   useEffect(() => {
+    setGameStat("inProcess")
     const fetchWord = async () => {
-      const res = await fetch("api/letters");
-      const words: string[] = await res.json();
+      const res = await fetch("api/words");
+      const data: {
+        words: string[];
+        checkWord: string[];
+        meanings: { word: string; meaning: string }[];
+      } = await res.json();
 
-      const randomWord = words[Math.floor(Math.random() * words.length)];
+      const randomWord =
+        data.words[Math.floor(Math.random() * data.words.length)];
 
+      const wordMeaning = data.meanings.find(
+        (item) => item.word === randomWord,
+      );
+
+      setMeaning(wordMeaning?.meaning ?? "");
       setTargetWord(randomWord);
-      setWords(words);
+      setAnswerWords(data.words);
+      // allow guesses that are either in the big.txt corpus or in the answer list
+      setValidWords(new Set([...data.checkWord, ...data.words]));
     };
     fetchWord();
   }, []);
 
   const insertLetter = (letter: string) => {
+    if (gameStat !== "inProcess") return;
     if (currentCol >= 5) return;
     if (currentRow === 6) return;
 
@@ -54,6 +72,7 @@ export default function Home() {
   };
 
   const removeLetter = () => {
+    if (gameStat !== "inProcess") return;
     if (currentCol === 0) return;
 
     setBoard((prevBoard) => {
@@ -69,10 +88,11 @@ export default function Home() {
   };
 
   const submitGuess = () => {
+    if (gameStat !== "inProcess") return;
     if (currentCol < 5) return;
 
     const guess = board[currentRow].map((tile) => tile.letter).join("");
-    if (!words.includes(guess)) {
+    if (!validWords.has(guess)) {
       setShowAlert(true);
       setTimeout(() => {
         setShowAlert(false);
@@ -105,7 +125,22 @@ export default function Home() {
       }
     }
 
+    const isWin = newBoard[currentRow].every(
+      (tile) => tile.status === "correct",
+    );
+
     setBoard(newBoard);
+
+    if (isWin) {
+      setGameStat("win");
+      return;
+    }
+
+    const isLastRow = currentRow === 5;
+    if (isLastRow) {
+      setGameStat("lose");
+      return;
+    }
 
     setCurrentRow((prev) => prev + 1);
     setCurrentCol(0);
@@ -126,7 +161,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentCol, currentRow, board]);
+  }, [currentCol, currentRow, board, targetWord, gameStat]);
 
   return (
     <div className="">

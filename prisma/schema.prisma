@@ -1,0 +1,31 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model word_list {
+  id Int @id @default(autoincrement())
+  word String @unique
+
+  meanings word_meaning[]
+}
+
+model word_meaning {
+  id      Int       @id @default(autoincrement())
+  meaning String
+  word    word_list @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  wordId  Int
+
+  @@index([wordId])
+}
