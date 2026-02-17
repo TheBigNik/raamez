@@ -28,31 +28,39 @@ export default function Home() {
   const [gameStat, setGameStat] = useState<"win" | "lose" | "inProcess">(
     "inProcess",
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   const startNewGame = useCallback(async () => {
     setGameStat("inProcess");
     setBoard(createEmptyBoard());
     setCurrentRow(0);
     setCurrentCol(0);
-    const res = await fetch("api/words");
-    const data: {
-      words: string[];
-      checkWord: string[];
-      meanings: { word: string; meaning: string }[];
-    } = await res.json();
+    try {
+      setIsLoading(true);
+      const res = await fetch("api/words");
+      const data: {
+        words: string[];
+        checkWord: string[];
+        meanings: { word: string; meaning: string }[];
+      } = await res.json();
 
-    const randomWord =
-      data.words[Math.floor(Math.random() * data.words.length)];
+      const randomWord =
+        data.words[Math.floor(Math.random() * data.words.length)];
 
-    const wordMeaning = data.meanings.find(
-      (item) => item.word === randomWord,
-    );
+      const wordMeaning = data.meanings.find(
+        (item) => item.word === randomWord,
+      );
 
-    setMeaning(wordMeaning?.meaning ?? "");
-    setTargetWord(randomWord);
-    setAnswerWords(data.words);
-    // allow guesses that are either in the big.txt corpus or in the answer list
-    setValidWords(new Set([...data.checkWord, ...data.words]));
+      setMeaning(wordMeaning?.meaning ?? "");
+      setTargetWord(randomWord);
+      setAnswerWords(data.words);
+      // allow guesses that are either in the big.txt corpus or in the answer list
+      setValidWords(new Set([...data.checkWord, ...data.words]));
+    } catch (error) {
+      console.log("Can't fetch the word", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -171,7 +179,7 @@ export default function Home() {
 
   const resetBoard = () => {
     startNewGame();
-  }
+  };
 
   return (
     <div className="">
@@ -207,19 +215,29 @@ export default function Home() {
           </Alert>
         </div>
       )}
-      <GameBoard
-        board={board}
-        currentRow={currentRow}
-        currentCol={currentCol}
-      />
-      <Keyboard
-        onKeyPress={insertLetter}
-        onEnter={submitGuess}
-        onDelete={removeLetter}
-      />
-      <div className="hidden md:flex justify-center">
-        برای شروع بازی، کیبوردت رو فارسی کن.
-      </div>
+      {isLoading ? (
+        <>
+          <div className="text-3xl font-bold flex justify-center">
+            کمی صبر کنید...
+          </div>
+        </>
+      ) : (
+        <>
+          <GameBoard
+            board={board}
+            currentRow={currentRow}
+            currentCol={currentCol}
+          />
+          <Keyboard
+            onKeyPress={insertLetter}
+            onEnter={submitGuess}
+            onDelete={removeLetter}
+          />
+          <div className="hidden md:flex justify-center">
+            برای شروع بازی، کیبوردت رو فارسی کن.
+          </div>
+        </>
+      )}
     </div>
   );
 }
